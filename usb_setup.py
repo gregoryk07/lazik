@@ -30,7 +30,7 @@ def create_custom_hid_gadget():
     with open(f"{GADGET_DIR}/strings/0x409/manufacturer", "w") as f:
         f.write("gregoryk07") # Manufacturer
     with open(f"{GADGET_DIR}/strings/0x409/product", "w") as f:
-        f.write("Lazik alpha v0") # Device name
+        f.write("Łazik alpha v0") # Device name
 
     with open(f"{GADGET_DIR}/functions/hid.usb0/protocol", "w") as f:
         f.write("0")
@@ -74,12 +74,7 @@ def create_custom_hid_gadget():
     else:
         raise RuntimeError("No UDC device found.")
 
-def get_cpu_temperature():
-    try:
-        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
-            return round(float(f.read().strip()) / 1000.0, 1)
-    except Exception:
-        return 0.0
+
 
 def handle_requests():
     print("Listening for requests from host on /dev/hidg0...")

@@ -3,6 +3,15 @@ import time
 import json
 from datetime import datetime
 import os
+import psutil
+import motors as motors
+import glob # UDC PATH FILTERING BECAUSE OF ASTERISK (*)
+import statusLED as ledStatus
+
+hardwareAttached = True
+
+lastUSBConnectState = "not attached"
+
 
 version = "v0"
 
@@ -10,13 +19,22 @@ steer = [0, 0]
 
 engines = [0, 0, 0, 0]
 
-def dumpLogToFile(log):
+def get_cpu_temperature():
+    try:
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            return round(float(f.read().strip()) / 1000.0, 1)
+    except Exception:
+        return 0.0
+
+def log(log):
     now = datetime.now()
     with open("logs/" + str(now.strftime("%Y-%m-%d")) + "-logdump.log", "a") as file:
         nowFormatted = now.strftime("%Y-%m-%d %H:%M:%S")
         file.write(f"[{nowFormatted}] {log}\n")
-dumpLogToFile("START")
+    print(log)
+log("START")
 def sendStatus():
+    psutil.cpu_percent(interval=None)
     dataPacket = {
         "name": "lazik",
         "version": version,
@@ -30,7 +48,9 @@ def sendStatus():
         "steer": {
             "fl" : steer[0],
             "fr" : steer[1]
-        }
+        },
+        "cpu_temp": get_cpu_temperature(),
+        "cpu_load": psutil.cpu_percent(interval=None)
     }
 
     json_str = json.dumps(dataPacket)
@@ -41,6 +61,23 @@ def usbcmdrun():
     global engines
     global steer
     global version
+    global hardwareAttached
+    global lastUSBConnectState
+
+    udc_paths = glob.glob('/sys/class/udc/*/state')
+
+    with open(udc_paths[0], 'r') as state_file:
+        state = state_file.read().strip("\n")
+        if state != lastUSBConnectState:
+            log("USB STATUS CHANGED: " + lastUSBConnectState + " -> " + state)
+            lastUSBConnectState = state
+            ledStatus.rgb(0, 1, 1)
+            match lastUSBConnectState:
+                case "not attached":
+                    ledStatus.rgb(0, 1, 0)
+                case "configured":
+                    ledStatus.rgb(0, 0, 1)
+                
 
     with open('/dev/hidg0', 'rb') as fd:
         request_bytes = fd.read(64)
@@ -64,11 +101,19 @@ def usbcmdrun():
             usbhid.send_data(json.dumps({"action" : "dumplog", "name" : requested_fname, "log": logs}))
     if command == "KILLENGINES":
         engines = [0, 0, 0, 0]
+        motors.motor(128)
         sendStatus()
     if "SETENGINE" in command:
         
         print("ENGINE " + command.split()[1] + " = " + str(command.split()[2]))
         engines[int(command.split()[1])] = int(command.split()[2])
+        desiredMotorSpeed = int(command.split()[2])
+        desiredMotorSpeed = max(-100, desiredMotorSpeed)
+        desiredMotorSpeed = min(100, desiredMotorSpeed)
+        mappedMotorSpeed = 128 + (desiredMotorSpeed * 128 / 100)
+        mappedMotorSpeed = max(0, mappedMotorSpeed)
+        mappedMotorSpeed = min(255, mappedMotorSpeed)
+        motors.motor(mappedMotorSpeed)
         sendStatus()
     if "SETSTEER" in command:
         cmdsplit = command.split()
@@ -80,24 +125,34 @@ def usbcmdrun():
         sendStatus()
 
 if __name__ == "__main__":
-    print(" ")
-    print(" ")
-    print("----------")
-    print(" ")
-    print(" ")
-    print("LAZIK SOFT LOADING")
-    print(version)
+    ledStatus.setup()
+    ledStatus.rgb(1, 1, 1)
+
+    time.sleep(1)
+    log(" ")
+    log(" ")
+    log("----------")
+    log(" ")
+    log(" ")
+    log("ŁAZIK SOFT LOADING")
+    log(version)
+    # hardwareAttached = motors.setup()
+    if not hardwareAttached:
+        log("HARDWARE NOT DETECTED, RUNNING IN HEADLESS MODE")
     usbhid.create_custom_hid_gadget()
-    print("LAZIK SOFT READY")
+    log("ŁAZIK SOFT READY")
+    ledStatus.rgb(0, 1, 0)
     while True:
         # print(f"VEL: {engines}\nINFO: {lastmsg}", end="\n\r\r")
         try:
             usbcmdrun()
         except KeyboardInterrupt:
-            dumpLogToFile("STOP")
+            log("STOP")
+            motors.destroy()
             exit()
         except Exception as e:
-            dumpLogToFile(f"Error {e}")
-            print(f"Error {e}")
+            # log(f"Error {e}")
+            log(f"Error {e}")
     # usbhid.handle_requests()
-dumpLogToFile("STOP")
+log("STOP")
+motors.destroy()
