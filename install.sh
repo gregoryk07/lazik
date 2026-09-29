@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+mkdir logs
 SERVICE_FILE="lazik.service"
 INSTALL_PATH=$(pwd)
 if [ -f "main.py" ]; then

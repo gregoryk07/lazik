@@ -26,7 +26,13 @@ def get_cpu_temperature():
     except Exception:
         return 0.0
 
+lastLog = ""
+
 def log(log):
+    global lastLog
+    if(log == lastLog):
+        return
+    lastLog = log
     now = datetime.now()
     with open("logs/" + str(now.strftime("%Y-%m-%d")) + "-logdump.log", "a") as file:
         nowFormatted = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -151,8 +157,8 @@ if __name__ == "__main__":
             motors.destroy()
             exit()
         except Exception as e:
+            pass
             # log(f"Error {e}")
-            log(f"Error {e}")
     # usbhid.handle_requests()
 log("STOP")
 motors.destroy()
