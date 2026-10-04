@@ -8,6 +8,7 @@
 from gpiozero import DigitalOutputDevice,PWMOutputDevice
 import time
 from ADCDevice import *
+from logs import log
 
 # define the pins connected to L293D
 motoRPin1 = DigitalOutputDevice(27)           # define L293D pin according to BCM Numbering
@@ -22,9 +23,9 @@ def setup():
     elif(adc.detectI2C(0x4b)): # Detect the ads7830
         adc = ADS7830()
     else:
-        print("No correct I2C address found, \n")
+        log("No correct I2C address found, \n", str(__name__).upper())
         if __name__ == "__main__":
-            print("Please use command 'i2cdetect -y 1' to check the I2C address! \nProgram exit\n")
+            log("Please use command 'i2cdetect -y 1' to check the I2C address! \nProgram exit\n", str(__name__).upper())
             exit(-1)
         else:
             return False
@@ -35,7 +36,7 @@ def mapNUM(value,fromLow,fromHigh,toLow,toHigh):
 
 # motor function: determine the direction and speed of the motor according to the input ADC value input
 def motor(ADC):
-    print("ADC: " + str(ADC))
+    # print("ADC: " + str(ADC))
     value = ADC -128
     if (value > 0):  # make motor turn forward
         motoRPin1.on()        # motoRPin1 output HIHG level

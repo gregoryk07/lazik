@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Łazik USB WebHID controller</title>
+    <script src="js/formatAnsi.js"></script>
 </head>
+
 <body>
     <h1>WebHID usb controller (łazik)</h1>
     <script>
-        if(!navigator.hid){
+        if (!navigator.hid) {
             document.write("<p>WebHID isn't available on this device!</p>")
         }
     </script>
@@ -15,12 +18,27 @@
     <button id="requestBtn" disabled>Request data</button>
     <p>Status: <span id="status">Disconnected</span></p>
     <p>Chunks/Packets Required to Receive Data: <span id="packetCount" style="font-weight: bold;">0</span></p>
-    <input type="range" min="-100" max="100" value="0" id="revSlider" oninput="revEngine(this.value)" onchange="killEngines()"><span id="revCount">0</span>
+    <input type="range" min="-100" max="100" value="0" id="revSlider" oninput="revEngine(this.value)"
+        onchange="killEngines()"><span id="revCount">0</span>
     <h2>Received JSON:</h2>
     <pre id="jsonDisplay" style="background: #f4f4f4; padding: 10px; font-family: monospace;">--</pre>
     <button onclick="sendData('DUMPDIR')">Refresh logs directory</button>
     <ul id="remoteFiles"></ul>
     <script>
+        var openedWindows = []
+        onbeforeunload = () => {
+            openedWindows.forEach(w => {
+                w.close();
+            })
+        }
+        const newWindow = (a, b, c, allowmultiple = false) => {
+            if(!allowmultiple){
+                openedWindows.forEach(w=>{
+                    w.close();
+                })
+            }
+            openedWindows[openedWindows.length] = window.open(a, b, c)
+        }
         let hidDevice = null;
         let receivedBuffer = "";
         let chunkCount = 0;
@@ -31,8 +49,8 @@
         const packetCountEl = document.getElementById('packetCount');
         const jsonDisplay = document.getElementById('jsonDisplay');
 
-        const VENDOR_ID = 0x1d6b; 
-        const PRODUCT_ID = 0x0105;
+        const VENDOR_ID = 0xCAFE;
+        const PRODUCT_ID = 0x8EAD;
 
         connectBtn.addEventListener('click', async () => {
             try {
@@ -50,56 +68,79 @@
                 requestBtn.disabled = false;
 
                 hidDevice.addEventListener('inputreport', (event) => {
-                    const { data } = event;
-                    const bytes = new Uint8Array(data.buffer);
-                    const decoder = new TextDecoder();
-                    const chunkString = decoder.decode(bytes).replace(/\0/g, '');
-                    console.log(chunkString)
-                    
-                    // Increment chunk counter for each incoming report segment
-                    chunkCount++;
-                    packetCountEl.textContent = chunkCount;
+                    if (event.reportId == 1) {
+                        const { data } = event;
+                        const bytes = new Uint8Array(data.buffer);
+                        const decoder = new TextDecoder();
+                        const chunkString = decoder.decode(bytes).replace(/\0/g, '');
+                        console.log(chunkString)
 
-                    receivedBuffer += chunkString;
+                        // Increment chunk counter for each incoming report segment
+                        chunkCount++;
+                        packetCountEl.textContent = chunkCount;
 
-                    // Reassemble and parse once the complete JSON object ends with '}'
-                    if (receivedBuffer.includes('}')) {
-                        try {
-                            const jsonData = JSON.parse(receivedBuffer);
-                            console.log(jsonData)
-                            jsonDisplay.textContent = JSON.stringify(jsonData, null, 4);
-                            if(jsonData.action == "dumpdir"){
-                                document.getElementById("remoteFiles").innerHTML = ""
-                                for (let i = 0; i < jsonData.files.length; i++) {
-                                    const file = jsonData.files[i];
-                                    console.log(file.name)
-                                    document.getElementById("remoteFiles").innerHTML += "<li onclick=\"sendData('DUMPLOG " + file.name + "')\">" + file.name + " - " + file.size + " Bytes</li>"
+                        receivedBuffer += chunkString;
+
+                        // Reassemble and parse once the complete JSON object ends with '}'
+                        if (receivedBuffer.includes('}')) {
+                            try {
+                                const jsonData = JSON.parse(receivedBuffer);
+                                console.log(jsonData)
+                                jsonDisplay.textContent = JSON.stringify(jsonData, null, 4);
+                                if (jsonData.action == "dumpdir") {
+                                    document.getElementById("remoteFiles").innerHTML = ""
+                                    for (let i = 0; i < jsonData.files.length; i++) {
+                                        const file = jsonData.files[i];
+                                        console.log(file.name)
+                                        document.getElementById("remoteFiles").innerHTML += "<li onclick=\"sendData('DUMPLOG " + file.name + "')\">" + file.name + " - " + file.size + " Bytes</li>"
+                                    }
                                 }
+                                if (jsonData.action == "dumplog") {
+                                    // console.warn("A")
+                                    const styleStr = `
+                                        *{
+                                            font-family: Helvetica;
+                                            margin: 0;
+                                            padding: 0;
+                                        }
+                                        body{
+                                            padding: 5px 0;
+                                            background-color: rgb(72, 72, 72);
+                                        }
+                                        .line{
+                                            display: block;
+                                            padding: 5px 0;
+                                            line-height: 25px;
+                                        }
+                                        .line:nth-of-type(odd){
+                                            background-color: rgb(110, 110, 110)
+                                        }
+                                    `
+                                    let content = "<head><title>" + jsonData.name + "</title><style>"+styleStr+"</style><meta name=\"charset\" content=\"utf-8\"></head><body>" + formatAnsi(jsonData.log) + "</bo" + "dy>";
+                                    // let content = "AAA"
+                                    // console.log(jsonData.log.split("\n").join("<br>"))
+                                    // console.warn("Ab")
+                                    const b = new Blob([content], {
+                                        type: "text/html",
+                                    });
+                                    // console.warn("Aa")
+                                    newWindow(URL.createObjectURL(b), "popup", "popup")
+                                    // console.warn("Ac")
+                                }
+                                // Reset buffer for the next transaction
+                                receivedBuffer = "";
+
+
+                            } catch (e) {
+                                // console.error(e)
+                                // Keep accumulating if JSON is still incomplete
                             }
-                            if(jsonData.action == "dumplog"){
-                                // console.warn("A")
-                                let content = "<head><title>" + jsonData.name + "</title><meta name=\"charset\" content=\"utf-8\"></head><body>" + jsonData.log.split("\n").join("<br>") + "</bo" + "dy>";
-                                // let content = "AAA"
-                                // console.log(jsonData.log.split("\n").join("<br>"))
-                                // console.warn("Ab")
-                                const b = new Blob([content], {
-                                    type: "text/html",
-                                });
-                                // console.warn("Aa")
-                                window.open(URL.createObjectURL(b), "popup", "popup")
-                                // console.warn("Ac")
-                            }
-                            // Reset buffer for the next transaction
-                            receivedBuffer = ""; 
-                        } catch (e) {
-                            // console.error(e)
-                            // Keep accumulating if JSON is still incomplete
                         }
+                        // console.log(receivedBuffer)
                     }
-                    // console.log(receivedBuffer)
                 });
 
-                
+
             } catch (error) {
                 console.error("Connection error:", error);
                 statusEl.textContent = `Error: ${error.message}`;
@@ -120,11 +161,11 @@
             const buffer = new Uint8Array(64);
             buffer.set(commandBytes);
 
-            await hidDevice.sendReport(0, buffer);
+            await hidDevice.sendReport(1, buffer);
             console.log("Requested data from device...");
         });
 
-        async function sendData(string){
+        async function sendData(string) {
             if (!hidDevice) return;
 
             chunkCount = 0;
@@ -136,7 +177,7 @@
             const buffer = new Uint8Array(64);
             buffer.set(commandBytes);
 
-            await hidDevice.sendReport(0, buffer);
+            await hidDevice.sendReport(1, buffer);
             console.log("Requested data from device...");
         }
         async function killEngines(value) {
@@ -144,7 +185,7 @@
             document.getElementById("revSlider").value = 0;
             revEngine(0)
         }
-        async function revEngine(value){
+        async function revEngine(value) {
             console.log(value)
             document.getElementById("revCount").innerHTML = Math.round(value);
             if (!hidDevice) return;
@@ -161,6 +202,91 @@
             await hidDevice.sendReport(0, buffer);
             console.log("Requested data from device...");
         }
+
+
+
+
+
+
+
+        async function logFullHidDescriptor() {
+            try {
+                // 1. Prompt user to select device
+                if (!hidDevice) return console.log("No device chosen.");
+                const device = hidDevice
+
+                console.group(`%cFull HID Device Description: ${device.productName}`, "color: #007acc; font-weight: bold;");
+
+                // 2. Base Properties Descriptor
+                console.group("Device Metadata");
+                console.log(`Product Name:  ${device.productName}`);
+                console.log(`Vendor ID:     0x${device.vendorId.toString(16).padStart(4, '0').toUpperCase()}`);
+                console.log(`Product ID:    0x${device.productId.toString(16).padStart(4, '0').toUpperCase()}`);
+                console.log(`Connection:    ${device.opened ? "Connected/Open" : "Closed"}`);
+                console.groupEnd();
+
+                // 3. Complete Report Descriptor Tree
+                console.group("Hierarchical Report Descriptor (Collections)");
+                if (!device.collections || device.collections.length === 0) {
+                    console.log("No report collections exposed.");
+                } else {
+                    device.collections.forEach((collection, cIdx) => {
+                        console.group(`[Collection ${cIdx + 1}] Usage Page: 0x${collection.usagePage.toString(16).toUpperCase()}, Usage: 0x${collection.usage.toString(16).toUpperCase()}`);
+
+                        // Log child collections recursively if they exist
+                        if (collection.children && collection.children.length > 0) {
+                            console.log("Sub-collections:", collection.children);
+                        }
+
+                        // Complete Input Report structural description
+                        logReportFormat("Input Reports", collection.inputReports);
+
+                        // Complete Output Report structural description
+                        logReportFormat("Output Reports", collection.outputReports);
+
+                        // Complete Feature Report structural description
+                        logReportFormat("Feature Reports", collection.featureReports);
+
+                        console.groupEnd();
+                    });
+                }
+                console.groupEnd();
+                console.groupEnd();
+
+            } catch (error) {
+                console.error("Error retrieving full HID descriptor:", error);
+            }
+        }
+
+        // Helper to neatly parse and structure items inside the descriptor maps
+        function logReportFormat(title, reports) {
+            if (!reports || reports.length === 0) return;
+
+            console.group(title);
+            reports.forEach((report) => {
+                console.group(`Report ID: 0x${report.reportId.toString(16).toUpperCase()}`);
+
+                if (report.items && report.items.length > 0) {
+                    // Build a neat table view of data fields contained in this report packet
+                    const fieldsInfo = report.items.map((item, iIdx) => ({
+                        "Field #": iIdx + 1,
+                        "Usages": item.usages?.map(u => `0x${u.toString(16).toUpperCase()}`).join(', ') || "None",
+                        "Report Size (Bits)": item.reportSize,
+                        "Report Count": item.reportCount,
+                        "Total Bits": item.reportSize * item.reportCount,
+                        "Is Array": item.isArray ? "Yes" : "No",
+                        "Is Absolute": item.isAbsolute ? "Yes" : "No",
+                        "Has Null State": item.hasNullState ? "Yes" : "No"
+                    }));
+                    console.table(fieldsInfo);
+                } else {
+                    console.log("No explicit item definitions parsed for this report byte segment.");
+                }
+                console.groupEnd();
+            });
+            console.groupEnd();
+        }
     </script>
 </body>
+
 </html>

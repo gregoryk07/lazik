@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generic HID Tester</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <!-- NAGŁÓWEK -->
+    <header>
+        <div>
+            <h1>Generic HID Terminal</h1>
+            <span style="font-size: 0.85rem; color: #64748b;">Narzędzie diagnostyczne WebHID (Max 64B)</span>
+        </div>
+        <div id="status-badge" class="status-badge">Rozłączono</div>
+    </header>
+
+    <!-- POŁĄCZENIE -->
+    <div class="card">
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-connect">Wyszukaj i Połącz</button>
+            <button id="btn-disconnect" class="btn-disconnect" disabled>Rozłącz</button>
+        </div>
+    </div>
+
+    <!-- PANEL NADAWCZY (OUTPUT REPORT) -->
+    <div class="card">
+        <h2>Wyślij Output Report</h2>
+        
+        <div class="form-row">
+            <!-- Wybór kanału / ID -->
+            <div class="form-group">
+                <label for="input-report-id">Report ID (Dec):</label>
+                <input type="number" id="input-report-id" value="1" min="0" max="255" disabled>
+            </div>
+            
+            <!-- Dane do wysłania -->
+            <div class="form-group">
+                <label for="input-payload">Dane raportu (Wpisz bajty w HEX rozdzielone spacjami):</label>
+                <input type="text" id="input-payload" placeholder="np. 01 00 FF AA 43" disabled>
+            </div>
+        </div>
+        
+        <button id="btn-send" class="btn-send" disabled>Wyślij do urządzenia</button>
+    </div>
+
+    <!-- TERMINAL / MONITOR ODBIORU -->
+    <div class="card">
+        <h2>Monitor komunikacji (Wszystkie kanały)</h2>
+        <div id="console-log" class="console">
+            <div class="console-entry info">Terminal gotowy. Otwórz połączenie USB...</div>
+        </div>
+    </div>
+</div>
+
+<script src="pico-panel.js"></script>
+</body>
+</html>

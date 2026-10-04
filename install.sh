@@ -2,7 +2,7 @@
 mkdir logs
 SERVICE_FILE="lazik.service"
 INSTALL_PATH=$(pwd)
-if [ -f "main.py" ]; then
+if [ -f "lazik.py" ]; then
     cat << EOF > $SERVICE_FILE
 [Unit]
 Description=Łazik zdalnie sterowany
@@ -13,7 +13,7 @@ Before=shutdown.target reboot.target
 Type=simple
 User=root
 WorkingDirectory=$INSTALL_PATH
-ExecStart=/usr/bin/python3 -u "${INSTALL_PATH}/main.py"
+ExecStart=/usr/bin/python3 -u "${INSTALL_PATH}/watchdog_daemon.py"
 
 KillMode=mixed
 TimeoutStopSec=2s
@@ -49,5 +49,5 @@ EOF
         sleep 1
     done
 else
-    echo "\"main.py\" not found in this directory, no changes have been made"
+    echo "\"lazik.py\" not found in this directory, no changes have been made"
 fi

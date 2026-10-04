@@ -6,6 +6,9 @@ ledR = None
 ledG = None
 ledB = None
 
+ledPrevious = [0, 1, 0]
+ledPrevious2 = [0, 1, 0]
+
 def setup():
     global setupDone
     global ledR
@@ -21,6 +24,13 @@ def setup():
     setupDone = True
 
 def rgb(r, g, b):
+    global ledPrevious, ledPrevious2
+    ledPrevious[0] = ledPrevious2[0]
+    ledPrevious[1] = ledPrevious2[1]
+    ledPrevious[2] = ledPrevious2[2]
+    ledPrevious2[0] = r
+    ledPrevious2[1] = g
+    ledPrevious2[2] = b
     if not setupDone:
         return
     if r:
@@ -35,6 +45,10 @@ def rgb(r, g, b):
         ledB.on()
     else:
         ledB.off()
+
+def previousRGB():
+    global ledPrevious
+    rgb(ledPrevious[0], ledPrevious[1], ledPrevious[2])
 
 if __name__ == "__main__":
     setup()
