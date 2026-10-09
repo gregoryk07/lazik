@@ -22,7 +22,7 @@
         onchange="killEngines()"><span id="revCount">0</span>
     <h2>Received JSON:</h2>
     <pre id="jsonDisplay" style="background: #f4f4f4; padding: 10px; font-family: monospace;">--</pre>
-    <button onclick="sendData('DUMPDIR')">Refresh logs directory</button>
+    <button onclick="sendData(new Int8Array([0x02]))">Refresh logs directory</button>
     <ul id="remoteFiles"></ul>
     <script>
         var openedWindows = []
@@ -73,6 +73,10 @@
                         const bytes = new Uint8Array(data.buffer);
                         const decoder = new TextDecoder();
                         const chunkString = decoder.decode(bytes).replace(/\0/g, '');
+                        if(bytes[0] == 0xA0){
+                            return;
+                        }
+                        // console.log(bytes)
                         console.log(chunkString)
 
                         // Increment chunk counter for each incoming report segment
@@ -80,6 +84,7 @@
                         packetCountEl.textContent = chunkCount;
 
                         receivedBuffer += chunkString;
+
 
                         // Reassemble and parse once the complete JSON object ends with '}'
                         if (receivedBuffer.includes('}')) {
@@ -92,7 +97,24 @@
                                     for (let i = 0; i < jsonData.files.length; i++) {
                                         const file = jsonData.files[i];
                                         console.log(file.name)
-                                        document.getElementById("remoteFiles").innerHTML += "<li onclick=\"sendData('DUMPLOG " + file.name + "')\">" + file.name + " - " + file.size + " Bytes</li>"
+                                        let li = document.createElement("li");
+                                        li.innerText = file.name + " - " + file.size + "B";
+                                        li.onclick = () => {
+                                            const encoder = new TextEncoder();
+                                            const commandBytes = encoder.encode(file.name);
+                                            const buffer = new Uint8Array(63);
+                                            buffer.set(commandBytes);
+
+                                            let packet = new Int8Array(64)
+                                            packet[0] = 0x03;
+                                            for (let i = 0; i < buffer.length; i++) {
+                                                packet[i+1] = buffer[i]
+                                            }
+                                            console.log(packet);
+                                            sendData(packet);
+                                        }
+                                        document.getElementById("remoteFiles").appendChild(li);
+                                        // document.getElementById("remoteFiles").innerHTML += "<li onclick=\"sendData('DUMPLOG " + file.name + "')\">" + file.name + " - " + file.size + " Bytes</li>"
                                     }
                                 }
                                 if (jsonData.action == "dumplog") {
@@ -156,28 +178,29 @@
             packetCountEl.textContent = "0";
             jsonDisplay.textContent = "Waiting for response...";
 
-            const encoder = new TextEncoder();
-            const commandBytes = encoder.encode("GET_DATA");
-            const buffer = new Uint8Array(64);
-            buffer.set(commandBytes);
+            // const encoder = new TextEncoder();
+            // const commandBytes = encoder.encode("GET_DATA");
+            // const buffer = new Uint8Array(64);
+            // buffer.set(commandBytes);
 
-            await hidDevice.sendReport(1, buffer);
+            console.log("GET_DATA")
+            await hidDevice.sendReport(1, new Int8Array([0x01]));
             console.log("Requested data from device...");
         });
 
-        async function sendData(string) {
+        async function sendData(bytes) {
             if (!hidDevice) return;
 
             chunkCount = 0;
             packetCountEl.textContent = "0";
             jsonDisplay.textContent = "Waiting for response...";
 
-            const encoder = new TextEncoder();
-            const commandBytes = encoder.encode(string);
-            const buffer = new Uint8Array(64);
-            buffer.set(commandBytes);
+            // const encoder = new TextEncoder();
+            // const commandBytes = encoder.encode(string);
+            // const buffer = new Uint8Array(64);
+            // buffer.set(commandBytes);
 
-            await hidDevice.sendReport(1, buffer);
+            await hidDevice.sendReport(1, bytes);
             console.log("Requested data from device...");
         }
         async function killEngines(value) {

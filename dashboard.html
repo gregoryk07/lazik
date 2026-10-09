@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Łazik</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="container">
+        <div class="box">
+            <div class="content">
+                <h1>Direct connection</h1>
+            </div> 
+        </div>
+        <div class="box">
+            <div class="content">
+                <h1>Receiver connection</h1>
+            </div>
+        </div>
+    </div>
+    <script>
+        alert("WARNING - LAGGY WEBSITE IN DEVELOPEMENT")
+        // addEventListener("resize", (e) => {
+        //     let objs = document.getElementsByClassName("content");
+        //     for (let i = 0; i < objs.length; i++) {
+        //         const element = objs[i];
+        //         let padding = Number(getComputedStyle(element).paddingLeft.split("px")[0]) + Number(getComputedStyle(element).paddingRight.split("px")[0]);
+        //         console.log(padding)
+        //         element.style.width = (Number(getComputedStyle(document.getElementById("container")).width.split("px")[0]) * 0.8) - padding + "px"
+        //     }
+        // })
+        var currentSection = 0;
+        function section(nr){
+            let sections = document.getElementsByClassName("box");
+            for (let i = 0; i < sections.length; i++) {
+                const element = sections[i];
+                element.style.flex = "5";
+                element.style.opacity = 0.3
+                element.style.cursor = "pointer"
+                element.onmouseover = (e) => {
+                    // console.log("OVER");
+                    // console.log(e)
+                    element.relatedTarget.style.opacity = 0.5
+                }
+                element.onmouseleave = (e) => {
+                    element.style.opacity = 0.3
+                    // console.log("OVER");
+
+                }
+                element.addEventListener("click", (e) => {
+                    // console.log(e)
+                    // console.log(i)
+                    section(i);
+                })
+            }
+
+            sections[nr].onmouseover = () => {
+                
+                sections[nr].style.opacity = 1
+            }
+            sections[nr].onmouseleave = () => {
+                
+                sections[nr].style.opacity = 1
+            }
+            sections[nr].click = () => { } 
+
+            sections[nr].style.flex = "95"
+            sections[nr].style.opacity = 1
+            sections[nr].style.cursor = "auto";
+
+            currentSection = nr;
+        }
+
+        section(0)
+
+    </script>
+</body>
+</html>
