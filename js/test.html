@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USBHID TEST</title>
+    <script src="USBHID.js"></script>
+</head>
+<body>
+    <textarea id="rawDataDisplay" disabled rows = 3 cols="102" style="resize: none; font-size: large;"></textarea>
+    <canvas id="armPositionDisplay" width="300" height="300"></canvas>
+    <script>
+        addEventListener("USBHID_CONNECTED", (e) => {
+            console.log(e)
+        })
+        addEventListener("USBHID_CONNECTED", (e) => {
+            console.log(e)
+        })
+        addEventListener("LAZIK_ARMUPDATE", (e) => {
+            console.log("ARM UPDATE", 
+                USBHID.deviceData.LazikDirect.armPosition.baseY,
+                USBHID.deviceData.LazikDirect.armPosition.alpha,
+                USBHID.deviceData.LazikDirect.armPosition.beta
+            )
+
+            const ctx = document.getElementById("armPositionDisplay").getContext("2d");
+            
+            ctx.fillStyle = "gray"
+            ctx.fillRect(0, 0, 300, 300)
+            ctx.beginPath();
+            ctx.strokeStyle = "red";
+            ctx.moveTo(150, 150);
+            let scale = 10;
+            let posA = [
+                150 + Math.cos(USBHID.deviceData.LazikDirect.armPosition.alpha * Math.PI / 180) * USBHID.deviceData.LazikDirect.armPosition.arm_len1 * scale,
+                150 - Math.sin(USBHID.deviceData.LazikDirect.armPosition.alpha * Math.PI / 180) * USBHID.deviceData.LazikDirect.armPosition.arm_len1 * scale
+            ]
+            // console.log(posA)
+            ctx.lineTo(posA[0], posA[1])
+            ctx.stroke()
+            ctx.closePath()
+            ctx.beginPath()
+            let posB = [
+                posA[0] + Math.cos((USBHID.deviceData.LazikDirect.armPosition.beta) * Math.PI / 180) * USBHID.deviceData.LazikDirect.armPosition.arm_len2 * scale,
+                posA[1] - Math.sin((USBHID.deviceData.LazikDirect.armPosition.beta) * Math.PI / 180) * USBHID.deviceData.LazikDirect.armPosition.arm_len2 * scale
+            ]
+            ctx.moveTo(posA[0], posA[1])
+            ctx.strokeStyle = "blue";
+            ctx.lineTo(posB[0], posB[1])
+            ctx.stroke();
+            ctx.closePath()
+
+
+        })
+        addEventListener("USBHID_RAWDATA_INCOMING", (e) => {
+            // console.log(e)
+            const bytesToHexString = e.detail.bytes.toHex().match(/.{1,2}/g).join(' ').toUpperCase();
+            document.getElementById("rawDataDisplay").innerText = bytesToHexString
+        })
+    </script>
+</body>
+</html>

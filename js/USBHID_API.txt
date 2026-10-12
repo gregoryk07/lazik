@@ -1,0 +1,13 @@
+RESPONSE EXAMPLE (JS):
+
+addEventListener("USBHID_CONFIGURED", (e) =>{
+    alert("CONFIGURED: " + e.detail.deviceType) // for example e.detail.deviceType = "LAZIK_DIRECT"
+})
+
+RESPONSES:
+
+USBHID_SELECT_INCORRECT_DEVICE - An attempt happened trying to connect a device using wrong function ("WRONG DRIVER")
+USBHID_SELECT_NO_DEVICE - User didn't select a device using a popup
+USBHID_CONNECTED - connected device has been connected using a driver, returns deviceType
+USBHID_CONFIGURED - connected device has been configured, returns deviceType
+LAZIK_ARMUPDATE - updated angles of the arm (every 2 seconds), data availabie under USBHID.deviceData.LazikDirect
