@@ -19,6 +19,7 @@
     <button onclick="USBHID.Connect.LazikDirect()">CONNECT LAZIK_DIRECT</button>
     <button onclick="USBHID.Connect.Steamdeck()">CONNECT STEAMDECK</button><br>
     <textarea id="rawDataDisplay" disabled rows = 3 cols="102" style="resize: none; font-size: large;"></textarea><br>
+    <img src="" alt="" id="videoStream">
     <div id="steamdeckdata">
         <ol id="bytesRaw"></ol>
         <pre id="steamdeckInput">
@@ -69,8 +70,13 @@
 
 
         })
+        addEventListener("CAMERA_FRAME_RECEIVED", (e) => {
+            document.getElementById("videoStream").src = e.detail.link
+            document.getElementById("videoStream").width = 320
+            document.getElementById("videoStream").height = 180
+        })
         addEventListener("USBHID_RAWDATA_INCOMING", (e) => {
-            // console.log(e)
+            // console.log(e.detail.bytes[0], e.detail.bytes[1] / 62)
             const bytesToHexString = e.detail.bytes.toHex().match(/.{1,2}/g).join(' ').toUpperCase();
             document.getElementById("rawDataDisplay").innerText = bytesToHexString
             document.getElementById("bytesRaw").innerHTML = "";
@@ -81,6 +87,18 @@
                 document.getElementById("bytesRaw").appendChild(li)
             }
         })
+        window.addEventListener("LAZIK_FRAME", (event) => {
+            const imageUrl = event.detail;
+            const imgElement = document.getElementById('videoStream');
+            
+            if (imgElement) {
+                // Zwolnienie poprzedniego URL z pamięci RAM przeglądarki
+                if (imgElement.src) {
+                    URL.revokeObjectURL(imgElement.src);
+                }
+                imgElement.src = imageUrl;
+            }
+        });
     </script>
 </body>
 </html>

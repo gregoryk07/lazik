@@ -4,17 +4,24 @@ addEventListener("USBHID_CONFIGURED", (e) =>{
     alert("CONFIGURED: " + e.detail.deviceType) // for example e.detail.deviceType = "LAZIK_DIRECT"
 })
 
+addEventListener("CAMERA_FRAME_RECEIVED", (e) => {
+    document.getElementById("videoStream").src = e.detail.link
+    document.getElementById("videoStream").width = 320
+    document.getElementById("videoStream").height = 180
+})
+
 RESPONSES:
 
 USBHID_SELECT_INCORRECT_DEVICE - An attempt happened trying to connect a device using wrong function ("WRONG DRIVER")
 USBHID_SELECT_NO_DEVICE - User didn't select a device using a popup
 USBHID_CONNECTED - connected device has been connected using a driver, returns deviceType
-USBHID_CONFIGURED - connected device has been configured, returns deviceType
+USBHID_CONFIGURED - connected device has been configured, returns deviceType ^example above^
 LAZIK_ARMUPDATE - updated angles of the arm (every 2 seconds), data availabie under USBHID.deviceData.LazikDirect
+CAMERA_FRAME_RECEIVED - called each time a frame from camera feed is transmitted, returns a link to an image (detail.link) ^example above^
 
 RESPONSES DATA:
 
 USBHID_CONNECTED, USBHID_CONFIGURED:
     detail.deviceType:
-        - STEAMDECK
-        - LAZIK_DIRECT
+        - STEAMDECK (pain)
+        - LAZIK_DIRECT (yipi)

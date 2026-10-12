@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Łazik - WebHID Stream & Telemetry Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            background-color: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #005999;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        img#videoStream {
+            width: 320px;
+            height: 240px;
+            background-color: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .panel {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            width: 340px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .debug-label {
+            color: #888;
+        }
+        .debug-val {
+            color: #4ec9b0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Łazik Control & Live Feed</h1>
+    
+    <div class="container">
+        <button id="connectBtn">Connect USB HID</button>
+        
+        <!-- Element wideo strumienia -->
+        <img id="videoStream" alt="Waiting for video stream..." />
+
+        <!-- Panel telemetryczny (RID 1) -->
+        <div class="panel" id="telemetryPanel">
+            <strong>Telemetry (RID 1):</strong><br>
+            Base Y: <span id="valBase" class="debug-val">--</span>°<br>
+            Alpha: <span id="valAlpha" class="debug-val">--</span>°<br>
+            Beta: <span id="valBeta" class="debug-val">--</span>°
+        </div>
+
+        <!-- Panel debugowania strumienia wideo (RID 2) -->
+        <div class="panel" id="debugPanel">
+            <strong>Video Debug (RID 2):</strong><br>
+            <span class="debug-label">Last Report ID:</span> <span id="dbgReportId" class="debug-val">None</span><br>
+            <span class="debug-label">Current Seq:</span> <span id="dbgSeq" class="debug-val">0</span><br>
+            <span class="debug-label">Chunks in buffer:</span> <span id="dbgChunks" class="debug-val">0</span><br>
+            <span class="debug-label">Last Frame Size:</span> <span id="dbgFrameSize" class="debug-val">0 bytes</span><br>
+            <span class="debug-label">Decoded Frames:</span> <span id="dbgFramesTotal" class="debug-val">0</span><br>
+            <span class="debug-label">Resets / Drops:</span> <span id="dbgResets" class="debug-val">0</span>
+        </div>
+    </div>
+
+    <script>
+        let debugStats = {
+            framesTotal: 0,
+            resets: 0,
+            lastSize: 0
+        };
+
+        // --- 1. DEKODER BAJTÓW WIDEO ---
+        class VideoByteDecoder {
+            constructor() {
+                this.frameBuffer = [];
+                this.expectedSequence = 0;
+            }
+
+            pushChunk(sequence, chunkData) {
+                document.getElementById('dbgSeq').innerText = sequence;
+                document.getElementById('dbgChunks').innerText = this.frameBuffer.length + 1;
+
+                if (sequence === 0) {
+                    this.frameBuffer = [chunkData];
+                    this.expectedSequence = 1;
+                    return null;
+                }
+
+                if (sequence === this.expectedSequence) {
+                    this.frameBuffer.push(chunkData);
+                    this.expectedSequence = (this.expectedSequence + 1) % 256;
+
+                    // Ponieważ chunk ma 63 bajty, ostatni ucięty chunk będzie mniejszy niż 63
+                    if (chunkData.length < 63 || this._isJpegComplete(this.frameBuffer)) {
+                        const completeFrame = this._flattenBuffers(this.frameBuffer);
+                        
+                        debugStats.framesTotal++;
+                        debugStats.lastSize = completeFrame.length;
+                        document.getElementById('dbgFramesTotal').innerText = debugStats.framesTotal;
+                        document.getElementById('dbgFrameSize').innerText = completeFrame.length + " bytes";
+
+                        this.frameBuffer = [];
+                        this.expectedSequence = 0;
+                        return completeFrame;
+                    }
+                } else {
+                    debugStats.resets++;
+                    document.getElementById('dbgResets').innerText = debugStats.resets;
+
+                    this.frameBuffer = [];
+                    this.expectedSequence = 0;
+                }
+
+                return null;
+            }
+
+            _isJpegComplete(buffers) {
+                const lastBuf = buffers[buffers.length - 1];
+                for (let i = lastBuf.length - 1; i > 0; i--) {
+                    if (lastBuf[i] === 0xD9 && lastBuf[i - 1] === 0xFF) return true;
+                    if (lastBuf[i] !== 0x00) break;
+                }
+                return false;
+            }
+
+            _flattenBuffers(buffers) {
+                const totalLength = buffers.reduce((acc, buf) => acc + buf.length, 0);
+                const result = new Uint8Array(totalLength);
+                let offset = 0;
+                for (const buf of buffers) {
+                    result.set(buf, offset);
+                    offset += buf.length;
+                }
+                return result;
+            }
+        }
+
+        const videoDecoder = new VideoByteDecoder();
+        let hidDevice = null;
+
+        // --- 2. GŁÓWNA FUNKCJA ROZDZIELAJĄCA RAPORTY ---
+        function LazikDirect(reportId, dataView) {
+            document.getElementById('dbgReportId').innerText = reportId;
+            const bytes = new Uint8Array(dataView.buffer, dataView.byteOffset, dataView.byteLength);
+
+            switch(reportId) {
+                case 1: // Telemetria
+                    if(bytes[0] === 0xA0) {
+                        const baseY = (bytes[1] / 255) * 360;
+                        const alpha = (bytes[2] / 255) * 360;
+                        const beta = (bytes[3] / 255) * 360;
+
+                        document.getElementById('valBase').innerText = baseY.toFixed(1);
+                        document.getElementById('valAlpha').innerText = alpha.toFixed(1);
+                        document.getElementById('valBeta').innerText = beta.toFixed(1);
+                    }
+                    break;
+                    
+                case 2: // Strumień wideo
+                    const sequence = dataView.getUint8(1);
+                    // 63 bajty danych po indeksie 2
+                    const chunkData = new Uint8Array(dataView.buffer, dataView.byteOffset + 2, dataView.byteLength - 2);
+                    
+                    const jpegBytes = videoDecoder.pushChunk(sequence, chunkData);
+                    
+                    if (jpegBytes) {
+                        const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
+                        const imageUrl = URL.createObjectURL(blob);
+                        
+                        const imgElement = document.getElementById('videoStream');
+                        if (imgElement) {
+                            if (imgElement.src) {
+                                URL.revokeObjectURL(imgElement.src);
+                            }
+                            imgElement.src = imageUrl;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        // --- 3. OBSŁUGA POŁĄCZENIA WEBHID ---
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                const devices = await navigator.hid.requestDevice({
+                    filters: [{ vendorId: 0xCAFE, productId: 0x8EAD }]
+                });
+
+                if (devices.length === 0) {
+                    console.log("No device selected.");
+                    return;
+                }
+
+                hidDevice = devices[0];
+                if (!hidDevice.opened) {
+                    await hidDevice.open();
+                }
+
+                console.log("Connected to:", hidDevice.productName);
+                document.getElementById('connectBtn').innerText = "Connected ✅";
+
+                hidDevice.addEventListener("inputreport", (event) => {
+                    const { reportId, data } = event;
+                    LazikDirect(reportId, data);
+                });
+
+            } catch (error) {
+                console.error("HID Connection error:", error);
+                alert("Connection failed: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

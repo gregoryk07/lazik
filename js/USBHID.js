@@ -3,7 +3,53 @@ function deadzone(x, y, _deadzone){
     let _y = (Math.abs(y) >= _deadzone) ? y : 0
     return {x: _x, y: _y}
 }
+
+
+
 class USBHID{
+    static videoFrameBuffer = []
+    static createFrame() {
+        const validChunks = USBHID.videoFrameBuffer.filter(el => el !== undefined);
+
+        if (validChunks.length === 0) {
+            USBHID.videoFrameBuffer = [];
+            return;
+        }
+
+        const totalLength = validChunks.reduce((sum, arr) => sum + arr.length, 0);
+        const videoPacket = new Uint8Array(totalLength);
+
+        let offset = 0;
+        for (const chunk of validChunks) {
+            videoPacket.set(chunk, offset);
+            offset += chunk.length;
+        }
+
+        // Szukamy poprawnego końca JPEG (0xFF, 0xD9) i obcinamy śmieci
+        let cleanPacket = videoPacket;
+        let foundEnd = false;
+        
+        for (let i = videoPacket.length - 2; i >= 0; i--) {
+            if (videoPacket[i] === 0xFF && videoPacket[i + 1] === 0xD9) {
+                cleanPacket = videoPacket.subarray(0, i + 2);
+                foundEnd = true;
+                break;
+            }
+        }
+
+        if (!foundEnd) {
+            console.warn("Nie znaleziono poprawnego znacznika końca JPEG (FF D9)!");
+        }
+
+        // 5. Resetujemy bufor na kolejną klatkę
+        USBHID.videoFrameBuffer = [];
+
+        // Tworzymy Blob z oczyszczonych bajtów
+        const b = new Blob([cleanPacket], { type: 'image/jpeg' });
+        const link = URL.createObjectURL(b);
+        
+        return link;
+    }
     // DRIVERS
     static LAZIK_DIRECT = null
     static STEAMDECK = null
@@ -72,14 +118,30 @@ class USBHID{
             switch(reportId){
                 case 1:
                     if(bytes[0] == 0xA0){ // arm position callback (every 2 sec)
-                        USBHID.deviceData.LazikDirect.armPosition.baseY = bytes[1] / 255 * 360
-                        USBHID.deviceData.LazikDirect.armPosition.alpha = bytes[2] / 255 * 360
-                        USBHID.deviceData.LazikDirect.armPosition.beta = bytes[3] / 255 * 360
+                        USBHID.deviceData.LazikDirect.armPosition.baseY = bytes[1] / 255 * 360;
+                        USBHID.deviceData.LazikDirect.armPosition.alpha = bytes[2] / 255 * 360;
+                        USBHID.deviceData.LazikDirect.armPosition.beta = bytes[3] / 255 * 360;
                         dispatchEvent( new CustomEvent("LAZIK_ARMUPDATE") );
                     }
                     break;
+                    
                 case 2:
-                    console.warn("UNINTERPRETED CAMERA DATA INCOMING")
+                    
+                    if(bytes[0] == 0x01){
+                        const packet = new Uint8Array(bytes);
+                        
+                        const dataChunk = packet.subarray(2);
+                        // console.log(dataChunk);
+
+                        USBHID.videoFrameBuffer[bytes[1]] = dataChunk;
+                    }
+                    else if(bytes[0] == 0x02){
+                        const framelink = USBHID.createFrame();
+                        dispatchEvent(new CustomEvent("CAMERA_FRAME_RECEIVED", {detail: {
+                            link: framelink
+                        }}))
+                    }
+                    // console.log("UNIMPLEMENTED")
                     break;
             }
         },
