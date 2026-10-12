@@ -5,9 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>USBHID TEST</title>
     <script src="USBHID.js"></script>
+    <style>
+        #steamdeckdata{
+            display: flex;
+            gap: 10px;
+        }
+        #steamdeckdata>*{
+            flex: 1;
+        }
+    </style>
 </head>
 <body>
-    <textarea id="rawDataDisplay" disabled rows = 3 cols="102" style="resize: none; font-size: large;"></textarea>
+    <button onclick="USBHID.Connect.LazikDirect()">CONNECT LAZIK_DIRECT</button>
+    <button onclick="USBHID.Connect.Steamdeck()">CONNECT STEAMDECK</button><br>
+    <textarea id="rawDataDisplay" disabled rows = 3 cols="102" style="resize: none; font-size: large;"></textarea><br>
+    <div id="steamdeckdata">
+        <ol id="bytesRaw"></ol>
+        <pre id="steamdeckInput">
+            
+        </pre>
+    </div>
     <canvas id="armPositionDisplay" width="300" height="300"></canvas>
     <script>
         addEventListener("USBHID_CONNECTED", (e) => {
@@ -56,6 +73,13 @@
             // console.log(e)
             const bytesToHexString = e.detail.bytes.toHex().match(/.{1,2}/g).join(' ').toUpperCase();
             document.getElementById("rawDataDisplay").innerText = bytesToHexString
+            document.getElementById("bytesRaw").innerHTML = "";
+            for (let i = 0; i < e.detail.bytes.length; i++) {
+                const byte = e.detail.bytes[i];
+                let li = document.createElement("li");
+                li.innerText = byte.toString(16);
+                document.getElementById("bytesRaw").appendChild(li)
+            }
         })
     </script>
 </body>

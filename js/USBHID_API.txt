@@ -11,3 +11,10 @@ USBHID_SELECT_NO_DEVICE - User didn't select a device using a popup
 USBHID_CONNECTED - connected device has been connected using a driver, returns deviceType
 USBHID_CONFIGURED - connected device has been configured, returns deviceType
 LAZIK_ARMUPDATE - updated angles of the arm (every 2 seconds), data availabie under USBHID.deviceData.LazikDirect
+
+RESPONSES DATA:
+
+USBHID_CONNECTED, USBHID_CONFIGURED:
+    detail.deviceType:
+        - STEAMDECK
+        - LAZIK_DIRECT
