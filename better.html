@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html, body{
+            margin: 0;
+            padding: 0;
+
+        }
+        body{
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            height: calc(100dvh - 10px);
+        }
+        nav{
+            flex: 1;
+            padding: 5px;
+            background-color: gray;
+        }
+        main{
+            flex: 100;
+            padding: 5px;
+            background-color: gray;
+
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+        .nav_btn{
+            width: calc(100%);
+            padding: 20px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        
+        main {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px;
+        }
+            
+        main>div {
+            grid-row: span 2 / span 2;
+        }
+        #videoStream{
+            background-color: black;
+        }
+
+
+        #arm_canvas {
+            grid-column-start: 2;
+        }
+                
+    </style>
+</head>
+<body>
+    <nav>
+        <h2>Łazik</h2>
+        <button class="nav_btn">WIFI</button><br>
+        <button class="nav_btn">USB</button>
+        <hr>
+        <h2>Kontroler</h2>
+        <button class="nav_btn">STEAMDECK</button>
+    </nav>
+    <main id="main">
+        <div>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos praesentium incidunt dicta quam. Libero accusantium adipisci nisi, architecto quas tenetur eius, inventore cum perspiciatis recusandae, distinctio voluptates aut iusto expedita quae ullam possimus. Consequatur pariatur aliquid, repellendus ratione at veritatis. Non ipsum et hic enim harum tempore quia aliquam est perferendis velit, at eligendi, excepturi fugit, veritatis nemo? Perspiciatis adipisci voluptas omnis similique, est aliquid placeat optio aut aperiam obcaecati totam vitae nesciunt molestias nam doloribus porro repudiandae culpa veritatis explicabo veniam! Nulla minus dolorem reiciendis nesciunt placeat fugiat ratione in incidunt illum sapiente! Doloremque praesentium assumenda beatae voluptatum cumque, iure quaerat voluptatem porro inventore maiores, animi illum. Voluptate consequatur quae praesentium, repellat inventore voluptatum eveniet odio, laboriosam facilis sint, ad eaque! Iste voluptatum blanditiis, aspernatur aperiam eum ea incidunt aut at, facilis eligendi temporibus sit voluptates, quisquam odit vitae consectetur non nesciunt dolor doloribus necessitatibus totam! Ullam deleniti quidem molestiae, neque minima numquam ut sint velit quia reiciendis commodi quisquam quod, aliquid eos, possimus suscipit alias necessitatibus. Laudantium nulla eum iste iusto porro dicta aliquid necessitatibus aut molestias commodi in accusamus, pariatur facilis harum illo perferendis. Esse, reiciendis repellat. Blanditiis rerum tempore, architecto omnis accusamus aliquid pariatur inventore earum.
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos praesentium incidunt dicta quam. Libero accusantium adipisci nisi, architecto quas tenetur eius, inventore cum perspiciatis recusandae, distinctio voluptates aut iusto expedita quae ullam possimus. Consequatur pariatur aliquid, repellendus ratione at veritatis. Non ipsum et hic enim harum tempore quia aliquam est perferendis velit, at eligendi, excepturi fugit, veritatis nemo? Perspiciatis adipisci voluptas omnis similique, est aliquid placeat optio aut aperiam obcaecati totam vitae nesciunt molestias nam doloribus porro repudiandae culpa veritatis explicabo veniam! Nulla minus dolorem reiciendis nesciunt placeat fugiat ratione in incidunt illum sapiente! Doloremque praesentium assumenda beatae voluptatum cumque, iure quaerat voluptatem porro inventore maiores, animi illum. Voluptate consequatur quae praesentium, repellat inventore voluptatum eveniet odio, laboriosam facilis sint, ad eaque! Iste voluptatum blanditiis, aspernatur aperiam eum ea incidunt aut at, facilis eligendi temporibus sit voluptates, quisquam odit vitae consectetur non nesciunt dolor doloribus necessitatibus totam! Ullam deleniti quidem molestiae, neque minima numquam ut sint velit quia reiciendis commodi quisquam quod, aliquid eos, possimus suscipit alias necessitatibus. Laudantium nulla eum iste iusto porro dicta aliquid necessitatibus aut molestias commodi in accusamus, pariatur facilis harum illo perferendis. Esse, reiciendis repellat. Blanditiis rerum tempore, architecto omnis accusamus aliquid pariatur inventore earum.
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos praesentium incidunt dicta quam. Libero accusantium adipisci nisi, architecto quas tenetur eius, inventore cum perspiciatis recusandae, distinctio voluptates aut iusto expedita quae ullam possimus. Consequatur pariatur aliquid, repellendus ratione at veritatis. Non ipsum et hic enim harum tempore quia aliquam est perferendis velit, at eligendi, excepturi fugit, veritatis nemo? Perspiciatis adipisci voluptas omnis similique, est aliquid placeat optio aut aperiam obcaecati totam vitae nesciunt molestias nam doloribus porro repudiandae culpa veritatis explicabo veniam! Nulla minus dolorem reiciendis nesciunt placeat fugiat ratione in incidunt illum sapiente! Doloremque praesentium assumenda beatae voluptatum cumque, iure quaerat voluptatem porro inventore maiores, animi illum. Voluptate consequatur quae praesentium, repellat inventore voluptatum eveniet odio, laboriosam facilis sint, ad eaque! Iste voluptatum blanditiis, aspernatur aperiam eum ea incidunt aut at, facilis eligendi temporibus sit voluptates, quisquam odit vitae consectetur non nesciunt dolor doloribus necessitatibus totam! Ullam deleniti quidem molestiae, neque minima numquam ut sint velit quia reiciendis commodi quisquam quod, aliquid eos, possimus suscipit alias necessitatibus. Laudantium nulla eum iste iusto porro dicta aliquid necessitatibus aut molestias commodi in accusamus, pariatur facilis harum illo perferendis. Esse, reiciendis repellat. Blanditiis rerum tempore, architecto omnis accusamus aliquid pariatur inventore earum.
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos praesentium incidunt dicta quam. Libero accusantium adipisci nisi, architecto quas tenetur eius, inventore cum perspiciatis recusandae, distinctio voluptates aut iusto expedita quae ullam possimus. Consequatur pariatur aliquid, repellendus ratione at veritatis. Non ipsum et hic enim harum tempore quia aliquam est perferendis velit, at eligendi, excepturi fugit, veritatis nemo? Perspiciatis adipisci voluptas omnis similique, est aliquid placeat optio aut aperiam obcaecati totam vitae nesciunt molestias nam doloribus porro repudiandae culpa veritatis explicabo veniam! Nulla minus dolorem reiciendis nesciunt placeat fugiat ratione in incidunt illum sapiente! Doloremque praesentium assumenda beatae voluptatum cumque, iure quaerat voluptatem porro inventore maiores, animi illum. Voluptate consequatur quae praesentium, repellat inventore voluptatum eveniet odio, laboriosam facilis sint, ad eaque! Iste voluptatum blanditiis, aspernatur aperiam eum ea incidunt aut at, facilis eligendi temporibus sit voluptates, quisquam odit vitae consectetur non nesciunt dolor doloribus necessitatibus totam! Ullam deleniti quidem molestiae, neque minima numquam ut sint velit quia reiciendis commodi quisquam quod, aliquid eos, possimus suscipit alias necessitatibus. Laudantium nulla eum iste iusto porro dicta aliquid necessitatibus aut molestias commodi in accusamus, pariatur facilis harum illo perferendis. Esse, reiciendis repellat. Blanditiis rerum tempore, architecto omnis accusamus aliquid pariatur inventore earum.
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos praesentium incidunt dicta quam. Libero accusantium adipisci nisi, architecto quas tenetur eius, inventore cum perspiciatis recusandae, distinctio voluptates aut iusto expedita quae ullam possimus. Consequatur pariatur aliquid, repellendus ratione at veritatis. Non ipsum et hic enim harum tempore quia aliquam est perferendis velit, at eligendi, excepturi fugit, veritatis nemo? Perspiciatis adipisci voluptas omnis similique, est aliquid placeat optio aut aperiam obcaecati totam vitae nesciunt molestias nam doloribus porro repudiandae culpa veritatis explicabo veniam! Nulla minus dolorem reiciendis nesciunt placeat fugiat ratione in incidunt illum sapiente! Doloremque praesentium assumenda beatae voluptatum cumque, iure quaerat voluptatem porro inventore maiores, animi illum. Voluptate consequatur quae praesentium, repellat inventore voluptatum eveniet odio, laboriosam facilis sint, ad eaque! Iste voluptatum blanditiis, aspernatur aperiam eum ea incidunt aut at, facilis eligendi temporibus sit voluptates, quisquam odit vitae consectetur non nesciunt dolor doloribus necessitatibus totam! Ullam deleniti quidem molestiae, neque minima numquam ut sint velit quia reiciendis commodi quisquam quod, aliquid eos, possimus suscipit alias necessitatibus. Laudantium nulla eum iste iusto porro dicta aliquid necessitatibus aut molestias commodi in accusamus, pariatur facilis harum illo perferendis. Esse, reiciendis repellat. Blanditiis rerum tempore, architecto omnis accusamus aliquid pariatur inventore earum.
+        </div>
+        <img src="" id="videoStream">
+        <canvas id="arm_canvas"></canvas>
+    </main>
+    <script>
+        const $ = (n) => document.getElementById(n)
+        function loop(){
+            const totalWidth = Number(getComputedStyle($("main")).width.split("px")[0] / 2)
+            const totalHeight = Number(getComputedStyle($("main")).height.split("px")[0] / 2)
+
+            $("videoStream").width = totalWidth
+            $("videoStream").height = totalHeight
+
+            const canvas = $("arm_canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = totalWidth;
+            canvas.height = totalHeight;
+            ctx.fillRect(0, 0, totalWidth, totalHeight)
+
+
+
+
+
+            // DRAW ARM
+
+
+
+            requestAnimationFrame(loop)
+        }
+        requestAnimationFrame(loop)
+    </script>
+</body>
+</html>
