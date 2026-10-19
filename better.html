@@ -47,7 +47,7 @@
         main>div {
             grid-row: span 2 / span 2;
         }
-        
+
 
 
         #arm_canvas {
@@ -78,6 +78,18 @@
     </main>
     <script>
         const $ = (n) => document.getElementById(n)
+
+        let armRots = {
+            base: 0,
+            alpha: 30,
+            beta: 30,
+            gamma: 30,
+            l1: 6,
+            l2: 6,
+            l3: 3,
+            scale: 10
+        }
+
         function loop(){
             const totalWidth = Number(getComputedStyle($("main")).width.split("px")[0] / 2)
             const totalHeight = Number(getComputedStyle($("main")).height.split("px")[0] / 2)
@@ -96,8 +108,58 @@
 
 
             // DRAW ARM
-            ctx.
 
+
+            // BASE
+            ctx.beginPath();
+                ctx.fillStyle = "gray";
+                ctx.arc(totalWidth / 2, totalHeight / 2, 25, 0, Math.PI * 2);
+                ctx.fill();
+            ctx.closePath();
+
+
+            // ALPHA
+            ctx.beginPath();
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = "red";
+                ctx.moveTo(totalWidth / 2, totalHeight / 2)
+                let d1 = {
+                    x: Math.cos(Math.PI / 180 * (-armRots.alpha)) * armRots.l1 * armRots.scale + totalWidth / 2,
+                    y: Math.sin(Math.PI / 180 * (-armRots.alpha)) * armRots.l1 * armRots.scale + totalHeight / 2,
+                }
+                ctx.lineTo(d1.x, d1.y);
+                ctx.stroke()
+            ctx.closePath();
+
+
+            // BETA
+            ctx.beginPath();
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = "yellow";
+                ctx.moveTo(d1.x, d1.y)
+                let d2 = {
+                    x: Math.cos(Math.PI / 180 * (armRots.beta - armRots.alpha)) * armRots.l2 * armRots.scale + d1.x,
+                    y: Math.sin(Math.PI / 180 * (armRots.beta - armRots.alpha)) * armRots.l2 * armRots.scale + d1.y,
+                }
+                ctx.lineTo(d2.x, d2.y); 
+                ctx.stroke()
+            ctx.closePath();
+
+
+            // GAMMA
+            ctx.beginPath();
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = "blue";
+                ctx.moveTo(d2.x, d2.y)
+                let d3 = {
+                    x: Math.cos(Math.PI / 180 * (armRots.gamma + armRots.beta - armRots.alpha)) * armRots.l3 * armRots.scale + d2.x,
+                    y: Math.sin(Math.PI / 180 * (armRots.gamma + armRots.beta - armRots.alpha)) * armRots.l3 * armRots.scale + d2.y,
+                }
+                ctx.lineTo(d3.x, d3.y);
+                ctx.stroke()
+            ctx.closePath();
+            
+            // console.log(d1, d2, d3)
 
             requestAnimationFrame(loop)
         }
