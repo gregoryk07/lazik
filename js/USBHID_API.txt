@@ -12,12 +12,14 @@ addEventListener("CAMERA_FRAME_RECEIVED", (e) => {
 
 RESPONSES:
 
-USBHID_SELECT_INCORRECT_DEVICE - An attempt happened trying to connect a device using wrong function ("WRONG DRIVER")
-USBHID_SELECT_NO_DEVICE - User didn't select a device using a popup
-USBHID_CONNECTED - connected device has been connected using a driver, returns deviceType
-USBHID_CONFIGURED - connected device has been configured, returns deviceType ^example above^
+USBHID_SELECT_INCORRECT_DEVICE - An attempt happened trying to connect a device using wrong function ("WRONG DRIVER") - WIFI_ERROR equivalent in WIFI
+USBHID_SELECT_NO_DEVICE - User didn't select a device using a popup - no WIFI equivalent
+USBHID_CONNECTED - connected device has been connected using a driver, returns deviceType - no WIFI equivalent
+USBHID_CONFIGURED - connected device has been configured, returns deviceType ^example above^ - WIFI_CONFIGURED equivalent in WIFI
 LAZIK_ARMUPDATE - updated angles of the arm (every 2 seconds), data availabie under USBHID.deviceData.LazikDirect
 CAMERA_FRAME_RECEIVED - called each time a frame from camera feed is transmitted, returns a link to an image (detail.link) ^example above^
+
+WIFI_DISCONNECT - called when device connected using websocket disconnects
 
 RESPONSES DATA:
 
