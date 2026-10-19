@@ -1,0 +1,48 @@
+html, body{
+            margin: 0;
+            padding: 0;
+
+        }
+        body{
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            height: calc(100dvh - 10px);
+        }
+        nav{
+            flex: 1;
+            padding: 5px;
+            background-color: gray;
+        }
+        main{
+            flex: 100;
+            padding: 5px;
+            background-color: gray;
+
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+        .nav_btn{
+            width: calc(100%);
+            padding: 20px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        
+        main {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 0px;
+        }
+            
+        main>div {
+            grid-row: span 2 / span 2;
+        }
+        
+
+
+        #arm_canvas {
+            grid-column-start: 2;
+        }
